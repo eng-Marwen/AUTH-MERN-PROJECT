@@ -28,8 +28,8 @@ const userSchma = new mongoose.Schema(
     },
     resetPasswordToken: String,
     resetPasswordTokenExpiresAt: Date,
-    verificationPasswordToken: String,
-    verificationPasswordTokenExpiresAt: Date
+    verificationToken: String,
+    verificationTokenExpiresAt: Date
   },
   {
     timestamps: true, //to automatically set createdAt and updatedAt fields
