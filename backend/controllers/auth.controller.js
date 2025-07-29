@@ -6,8 +6,8 @@ import {
   sendVerificatinMail,
   sendWemcomeEmail,
   sendLinkForResettingPwd,
+  sendResetPwdSuccessfullyMail
 } from "../sendingMails/emails.js";
-import { send } from "process";
 
 export const signup = async (req, res) => {
   try {
@@ -140,5 +140,30 @@ export const forgotPassword = async (req, res) => {
       status: "failed",
       message: error.message,
     });
+  }
+};
+export const resetPassword=async (req,res)=>{
+  try{
+    const token=req.query.token;
+    let {newPassword}=req.body;
+    if(!token ||!newPassword)throw new Error("missing token or the new password");
+    const user=await User.findOne({
+      resetPasswordToken:token,
+      resetPasswordTokenExpiresAt:{$gt:Date.now()}
+    });
+    if(!user)throw new Error("Invalid or expired token");
+    newPassword=bcrypt.hash(newPassword,10);
+    user.password=newPassword;
+    await user.save();
+    await sendResetPwdSuccessfullyMail(user.email);
+    res.status(200).json({
+      status:"success",
+      message:"password updated successfully"
+    })
+
+
+    
+  }catch(error){
+
   }
 };
