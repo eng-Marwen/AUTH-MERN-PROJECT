@@ -152,7 +152,7 @@ export const resetPassword=async (req,res)=>{
       resetPasswordTokenExpiresAt:{$gt:Date.now()}
     });
     if(!user)throw new Error("Invalid or expired token");
-    newPassword=bcrypt.hash(newPassword,10);
+    newPassword=await bcrypt.hash(newPassword,10);
     user.password=newPassword;
     await user.save();
     await sendResetPwdSuccessfullyMail(user.email);
@@ -160,10 +160,10 @@ export const resetPassword=async (req,res)=>{
       status:"success",
       message:"password updated successfully"
     })
-
-
-    
   }catch(error){
-
+    res.status(400).json({
+      status:'fail',
+      message:error.message
+    })
   }
 };
