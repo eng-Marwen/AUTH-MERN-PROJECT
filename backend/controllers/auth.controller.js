@@ -6,7 +6,7 @@ import {
   sendVerificatinMail,
   sendWemcomeEmail,
   sendLinkForResettingPwd,
-  sendResetPwdSuccessfullyMail
+  sendResetPwdSuccessfullyMail,
 } from "../sendingMails/emails.js";
 
 export const signup = async (req, res) => {
@@ -94,6 +94,7 @@ export const login = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) throw new Error("invalid password");
     generateTokenAndSetCookie(res, user.id);
+    const id=user.id;
     user.lastLogin = Date.now();
     await user.save();
     res.status(200).json({
@@ -123,11 +124,11 @@ export const forgotPassword = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) throw new Error("invalid email");
-    const resetPasswordToken = crypto.randomBytes(32).toString("hex");
+    const resetPasswordToken = crypto.randomBytes(10).toString("hex");
     const resetPasswordTokenExpiresAt = Date.now() + 15 * 60 * 1000; //15min
 
-    user.resetPasswordToken=resetPasswordToken;
-    user.resetPasswordTokenExpiresAt=resetPasswordTokenExpiresAt;
+    user.resetPasswordToken = resetPasswordToken;
+    user.resetPasswordTokenExpiresAt = resetPasswordTokenExpiresAt;
     await user.save();
 
     await sendLinkForResettingPwd(resetPasswordToken, user.email);
@@ -142,28 +143,44 @@ export const forgotPassword = async (req, res) => {
     });
   }
 };
-export const resetPassword=async (req,res)=>{
-  try{
-    const token=req.query.token;
-    let {newPassword}=req.body;
-    if(!token ||!newPassword)throw new Error("missing token or the new password");
-    const user=await User.findOne({
-      resetPasswordToken:token,
-      resetPasswordTokenExpiresAt:{$gt:Date.now()}
+export const resetPassword = async (req, res) => {
+  try {
+    const token = req.query.token;
+    let { newPassword } = req.body;
+    if (!token || !newPassword)
+      throw new Error("missing token or the new password");
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordTokenExpiresAt: { $gt: Date.now() },
     });
-    if(!user)throw new Error("Invalid or expired token");
-    newPassword=await bcrypt.hash(newPassword,10);
-    user.password=newPassword;
+    if (!user) throw new Error("Invalid or expired token");
+    newPassword = await bcrypt.hash(newPassword, 10);
+    user.password = newPassword;
     await user.save();
     await sendResetPwdSuccessfullyMail(user.email);
     res.status(200).json({
-      status:"success",
-      message:"password updated successfully"
-    })
-  }catch(error){
+      status: "success",
+      message: "password updated successfully",
+    });
+  } catch (error) {
     res.status(400).json({
-      status:'fail',
+      status: "fail",
+      message: error.message,
+    });
+  }
+};
+export const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) throw new Error("user not foud");
+    res.status(200).json({
+      status: "success",
+      data: user
+    });
+  } catch (error) {
+    res.status(200).json({
+      status: "fail",
       message:error.message
-    })
+    });
   }
 };
