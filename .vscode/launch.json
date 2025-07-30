@@ -8,20 +8,21 @@
       "name": "Attach by Process ID",
       "processId": "${command:PickProcess}",
       "request": "attach",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "type": "node"
     },
     {
-      "name": "Launch Node.js App",
+      "name": "Launch with nodemon",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/index.js",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nodemon", "${workspaceFolder}/backend/index.js"],
       "console": "integratedTerminal",
-      "restart": true,
-      "runtimeExecutable": "node",
-      "skipFiles": ["<node_internals>/**"]
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "skipFiles": ["<node_internals>/**"],
+      "restart": true
     }
   ]
 }
