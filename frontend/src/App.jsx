@@ -1,6 +1,9 @@
 import { Route, Routes } from "react-router-dom";
-import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import EmailVerificationPage from "./pages/EmailVerificationPage";
+import axios from "axios"
+
 
 function App() {
   return (
@@ -10,9 +13,11 @@ function App() {
     flex items-center justify-center relative overflow-hidden"
     >
       <Routes>
-        <Route path="/" element={"Home"}></Route>
-        <Route path="/signup" element={<SignUpPage/>}></Route>
-        <Route path="/login" element={<LoginPage/>}></Route>
+        <Route path="/home" element={"Home"}></Route>
+        <Route path="/" element={<LoginPage />}></Route>
+        <Route path="/signup" element={<SignUpPage />}></Route>
+        <Route path="/login" element={<LoginPage />}></Route>
+        <Route path="/verify-email" element={<EmailVerificationPage/>}></Route>
       </Routes>
     </div>
   );
