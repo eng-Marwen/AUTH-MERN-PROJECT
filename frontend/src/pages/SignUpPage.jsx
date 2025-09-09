@@ -7,7 +7,7 @@ import { ToastContainer } from "react-toastify";
 
 import { showToast } from "../popups/tostHelper.js";
 
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 import Input from "../components/Input";
 import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 
@@ -23,16 +23,15 @@ const SignUpPage = () => {
     axios
       .post("http://localhost:4000/api/auth/signup", { email, name, password })
       .then((res) => {
-      showToast("User registered successfully!", "success"); // ✅ pass message here
+        showToast("User registered successfully!", "success"); // pass message here
 
-        navigate("/home");
+        setTimeout(() => navigate("/verify-email"), 1500); // wait 1.5s
       })
       .catch((err) => {
         const message =
           ("Error:", err.response ? err.response.data : err.message);
-		  console.log(message)
-		  showToast(message,"error")
-		 navigate("/signup");
+        console.log(message);
+        showToast(message, "error");
       });
   };
   return (
@@ -93,7 +92,7 @@ const SignUpPage = () => {
           </Link>
         </p>
       </div>
-    	<ToastContainer /> {/* required for all toasts */}
+      <ToastContainer /> {/* required for all toasts */}
     </motion.div>
   );
 };
