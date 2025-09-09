@@ -1,13 +1,13 @@
-import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
+import { User } from "../models/user.model.js";
 import {
-  sendVerificatinMail,
-  sendWemcomeEmail,
   sendLinkForResettingPwd,
   sendResetPwdSuccessfullyMail,
+  sendVerificatinMail,
+  sendWemcomeEmail,
 } from "../sendingMails/emails.js";
+import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 
 export const signup = async (req, res) => {
   try {
@@ -16,20 +16,37 @@ export const signup = async (req, res) => {
       throw new Error("EMAIL AND PASSWORD ARE REQUIRED!");
     }
     const isExisted = await User.findOne({ email });
-    if (isExisted) throw new Error("USER ALREADY EXISTS");
+    if (isExisted && isExisted.isVerified)
+      throw new Error("USER ALREADY EXISTS");
     const verificationToken = Math.floor(100000 + Math.random() * 900000); //6 digits code
 
     const verificationTokenExpiresAt = new Date(Date.now() + 3600 * 1000 * 24); // This sets the expiration time to 24 hour(in ms) from now
-
+    let user
     password = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      name,
-      lastname,
-      email,
-      password,
-      verificationToken,
-      verificationTokenExpiresAt,
-    });
+    if (isExisted && !isExisted.isVerified) {
+       user = await User.findOneAndUpdate(
+        { email },
+        {
+          $set: {
+            name,
+            lastname,
+            password,
+            verificationToken,
+            verificationTokenExpiresAt,
+          },
+        },
+        { new: true }
+      );
+    } else {
+       user = await User.create({
+        name,
+        lastname,
+        email,
+        password,
+        verificationToken,
+        verificationTokenExpiresAt,
+      });
+    }
     //jwt
     generateTokenAndSetCookie(res, user._id);
     await sendVerificatinMail(user.email, verificationToken);
@@ -94,7 +111,7 @@ export const login = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) throw new Error("invalid password");
     generateTokenAndSetCookie(res, user.id);
-    const id=user.id;
+    const id = user.id;
     user.lastLogin = Date.now();
     await user.save();
     res.status(200).json({
@@ -175,12 +192,12 @@ export const checkAuth = async (req, res) => {
     if (!user) throw new Error("user not foud");
     res.status(200).json({
       status: "success",
-      data: user
+      data: user,
     });
   } catch (error) {
     res.status(200).json({
       status: "fail",
-      message:error.message
+      message: error.message,
     });
   }
 };
